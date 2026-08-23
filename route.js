@@ -1,23 +1,17 @@
 // ============================================================
-// 信義運動中心 AR 路線設定
-// ============================================================
+// Xinyi Sports Center
+// AR Route Settings
 //
-// Target 0 = 第一張圖片
-// Target 1 = 第二張圖片
-// Target 2 = 第三張圖片
-// Target 3 = 第四張圖片
-// Target 4 = 第五張圖片
+// direction:
+// "forward" = 前進
+// "left"    = 左轉
+// "right"   = 右轉
 //
-// direction 可使用：
-// forward = 往前
-// left    = 往左
-// right   = 往右
-// back    = 往後
-//
+// arrived: true = 抵達，不顯示 Goose + Arrow
 // ============================================================
 
 
-const ROUTES = {
+export const ROUTES = {
 
     // --------------------------------------------------------
     // Target 0
@@ -29,11 +23,12 @@ const ROUTES = {
 
         instruction: "你快到門口了，往左轉",
 
-        direction: "forward",
+        direction: "left",
 
         rotation: 0,
 
         arrived: false
+
     },
 
 
@@ -45,13 +40,14 @@ const ROUTES = {
 
         location: "信義運動中心",
 
-        instruction: "往前走道電梯口",
+        instruction: "往前走到電梯口",
 
         direction: "forward",
 
         rotation: 0,
 
         arrived: false
+
     },
 
 
@@ -63,13 +59,14 @@ const ROUTES = {
 
         location: "信義運動中心",
 
-        instruction: "往前走道電梯口",
+        instruction: "往左轉到電梯口",
 
         direction: "left",
 
         rotation: 0,
 
         arrived: false
+
     },
 
 
@@ -81,13 +78,14 @@ const ROUTES = {
 
         location: "電梯口",
 
-        instruction: "搭電梯到6樓",
+        instruction: "搭電梯到 6 樓",
 
         direction: "forward",
 
         rotation: 0,
 
         arrived: false
+
     },
 
 
@@ -106,6 +104,7 @@ const ROUTES = {
         rotation: 0,
 
         arrived: true
+
     }
 
 };
