@@ -15,6 +15,41 @@
         信義運動中心 AR 導引
     </title>
 
+
+    <!-- =====================================================
+         MindAR + Three.js Import Map
+         
+         這個非常重要！
+         
+         MindAR 內部會使用：
+         
+         import ... from "three"
+         
+         瀏覽器本身不知道 "three" 是哪裡，
+         所以要在這裡告訴它。
+         ===================================================== -->
+
+    <script type="importmap">
+
+    {
+        "imports": {
+
+            "three":
+                "https://unpkg.com/three@0.160.0/build/three.module.js",
+
+            "three/addons/":
+                "https://unpkg.com/three@0.160.0/examples/jsm/"
+
+        }
+    }
+
+    </script>
+
+
+    <!-- =====================================================
+         CSS
+         ===================================================== -->
+
     <link
         rel="stylesheet"
         href="./style.css"
@@ -27,7 +62,7 @@
 
 
     <!-- =====================================================
-         AR 畫面
+         AR Camera Container
          ===================================================== -->
 
     <div id="ar-container"></div>
@@ -44,6 +79,7 @@
 
         <div class="card">
 
+
             <div class="logo">
                 🏸
             </div>
@@ -54,15 +90,19 @@
             </h1>
 
 
-            <p>
+            <p class="subtitle">
                 AR 導引
             </p>
 
 
             <p class="description">
+
                 請開啟相機，並對準指定圖片
+
                 <br>
-                系統會透過 AR 箭頭引導你前往目的地
+
+                系統會透過 AR 導引你前往目的地
+
             </p>
 
 
@@ -80,6 +120,7 @@
                 尚未啟動
             </div>
 
+
         </div>
 
     </div>
@@ -94,6 +135,9 @@
         class="hud"
     >
 
+
+        <!-- 目前位置 -->
+
         <div class="hud-top">
 
             <div class="location-box">
@@ -102,17 +146,20 @@
                     目前位置
                 </span>
 
+
                 <span
                     id="current-location"
                     class="location"
                 >
-                    尚未定位
+                    尚未辨識
                 </span>
 
             </div>
 
         </div>
 
+
+        <!-- 指示文字 -->
 
         <div class="hud-bottom">
 
@@ -124,6 +171,7 @@
             </div>
 
         </div>
+
 
     </div>
 
@@ -139,6 +187,7 @@
 
         <div class="arrival-card">
 
+
             <div class="arrival-icon">
                 🏸
             </div>
@@ -153,22 +202,20 @@
                 歡迎來到信義運動中心
             </p>
 
+
         </div>
 
     </div>
 
 
     <!-- =====================================================
-         JavaScript
+         App
          ===================================================== -->
 
-    <script type="module">
-
-        import "./route.js";
-
-        import "./app.js";
-
-    </script>
+    <script
+        type="module"
+        src="./app.js"
+    ></script>
 
 
 </body>
