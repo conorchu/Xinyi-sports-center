@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+
+<html lang="zh-Hant">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        MindAR Official Test
+    </title>
+
+
+    <!-- =====================================================
+         A-Frame
+         ===================================================== -->
+
+    <script
+        src="https://aframe.io/releases/1.5.0/aframe.min.js"
+    ></script>
+
+
+    <!-- =====================================================
+         MindAR Image Tracking
+         ===================================================== -->
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"
+    ></script>
+
+
+    <style>
+
+        html,
+        body {
+
+            margin: 0;
+
+            padding: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            overflow: hidden;
+
+            background: #000;
+
+            font-family:
+                Arial,
+                "Noto Sans TC",
+                sans-serif;
+
+        }
+
+
+        /* =================================================
+           AR
+           ================================================= */
+
+        a-scene {
+
+            position: fixed;
+
+            inset: 0;
+
+        }
+
+
+        /* =================================================
+           狀態
+           ================================================= */
+
+        #status {
+
+            position: fixed;
+
+            top: 20px;
+
+            left: 50%;
+
+            transform:
+                translateX(-50%);
+
+            width: calc(100% - 40px);
+
+            max-width: 420px;
+
+            padding: 16px 20px;
+
+            background:
+                rgba(0, 0, 0, 0.8);
+
+            color: white;
+
+            border-radius: 16px;
+
+            text-align: center;
+
+            z-index: 100;
+
+            font-size: 18px;
+
+            line-height: 1.5;
+
+        }
+
+
+        /* =================================================
+           成功
+           ================================================= */
+
+        #success {
+
+            position: fixed;
+
+            top: 50%;
+
+            left: 50%;
+
+            transform:
+                translate(-50%, -50%);
+
+            width: calc(100% - 60px);
+
+            max-width: 420px;
+
+            padding: 30px 20px;
+
+            background:
+                rgba(0, 160, 80, 0.92);
+
+            color: white;
+
+            border-radius: 20px;
+
+            text-align: center;
+
+            z-index: 200;
+
+            display: none;
+
+        }
+
+
+        #success.show {
+
+            display: block;
+
+        }
+
+
+        #success h1 {
+
+            margin: 0 0 10px 0;
+
+            font-size: 30px;
+
+        }
+
+
+        #success p {
+
+            margin: 0;
+
+            font-size: 18px;
+
+        }
+
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =====================================================
+         狀態
+         ===================================================== -->
+
+    <div id="status">
+
+        正在準備 MindAR 官方測試...
+
+    </div>
+
+
+    <!-- =====================================================
+         成功訊息
+         ===================================================== -->
+
+    <div id="success">
+
+        <h1>
+            🎯 TARGET FOUND
+        </h1>
+
+        <p>
+            MindAR 官方 Target 辨識成功！
+        </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         MindAR Scene
+         ===================================================== -->
+
+    <a-scene
+
+        mindar-image="
+            imageTargetSrc:
+            https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.mind;
+            autoStart: true;
+            uiLoading: yes;
+            uiScanning: yes;
+            uiError: yes;
+        "
+
+        color-space="sRGB"
+
+        renderer="
+            colorManagement: true;
+            physicallyCorrectLights
+        "
+
+        vr-mode-ui="
+            enabled: false
+        "
+
+        device-orientation-permission-ui="
+            enabled: false
+        "
+
+    >
+
+
+        <!-- =================================================
+             Camera
+             ================================================= -->
+
+        <a-camera
+
+            position="0 0 0"
+
+            look-controls="
+                enabled: false
+            "
+
+        ></a-camera>
+
+
+        <!-- =================================================
+             Target 0
+             ================================================= -->
+
+        <a-entity
+
+            id="target"
+
+            mindar-image-target="
+                targetIndex: 0
+            "
+
+        >
+
+
+            <!-- =============================================
+                 藍色測試方塊
+                 ============================================= -->
+
+            <a-plane
+
+                color="#00ff00"
+
+                opacity="0.7"
+
+                position="0 0 0"
+
+                height="0.552"
+
+                width="1"
+
+                rotation="0 0 0"
+
+            ></a-plane>
+
+
+        </a-entity>
+
+
+    </a-scene>
+
+
+    <!-- =====================================================
+         JavaScript
+         ===================================================== -->
+
+    <script>
+
+
+        const status =
+            document.querySelector(
+                "#status"
+            );
+
+
+        const success =
+            document.querySelector(
+                "#success"
+            );
+
+
+        const target =
+            document.querySelector(
+                "#target"
+            );
+
+
+        // ====================================================
+        // Target Found
+        // ====================================================
+
+        target.addEventListener(
+            "targetFound",
+            () => {
+
+                console.log(
+                    "================================"
+                );
+
+
+                console.log(
+                    "🎯 OFFICIAL MINDAR TARGET FOUND"
+                );
+
+
+                console.log(
+                    "Target 0 辨識成功"
+                );
+
+
+                console.log(
+                    "================================"
+                );
+
+
+                status.textContent =
+                    "🎯 Target 0 已辨識";
+
+
+                success.classList.add(
+                    "show"
+                );
+
+            }
+        );
+
+
+        // ====================================================
+        // Target Lost
+        // ====================================================
+
+        target.addEventListener(
+            "targetLost",
+            () => {
+
+                console.log(
+                    "Target 0 Lost"
+                );
+
+
+                status.textContent =
+                    "Target 暫時離開鏡頭";
+
+
+                success.classList.remove(
+                    "show"
+                );
+
+            }
+        );
+
+
+        // ====================================================
+        // MindAR Ready
+        // ====================================================
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            () => {
+
+                console.log(
+                    "================================"
+                );
+
+
+                console.log(
+                    "MindAR Official Test"
+                );
+
+
+                console.log(
+                    "Target: official card.mind"
+                );
+
+
+                console.log(
+                    "================================"
+                );
+
+            }
+        );
+
+
+    </script>
+
+
+</body>
+
+</html>
