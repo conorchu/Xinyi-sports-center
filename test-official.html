@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="zh-Hant">
 
 <head>
@@ -11,30 +10,32 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>
-        MindAR Official Test
-    </title>
+    <title>MindAR Official Test</title>
 
 
     <!-- =====================================================
-         A-Frame
+         Three.js Import Map
          ===================================================== -->
 
-    <script
-        src="https://aframe.io/releases/1.5.0/aframe.min.js"
-    ></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three":
+                "https://unpkg.com/three@0.160.0/build/three.module.js",
 
-
-    <!-- =====================================================
-         MindAR Image Tracking
-         ===================================================== -->
-
-    <script
-        src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"
-    ></script>
+            "three/addons/":
+                "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
 
 
     <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
 
         html,
         body {
@@ -59,22 +60,20 @@
         }
 
 
-        /* =================================================
-           AR
-           ================================================= */
-
-        a-scene {
+        #ar-container {
 
             position: fixed;
 
             inset: 0;
 
+            width: 100%;
+
+            height: 100%;
+
+            z-index: 1;
+
         }
 
-
-        /* =================================================
-           狀態
-           ================================================= */
 
         #status {
 
@@ -89,7 +88,7 @@
 
             width: calc(100% - 40px);
 
-            max-width: 420px;
+            max-width: 500px;
 
             padding: 16px 20px;
 
@@ -102,18 +101,90 @@
 
             text-align: center;
 
-            z-index: 100;
+            z-index: 20;
 
-            font-size: 18px;
+            font-size: 17px;
 
             line-height: 1.5;
 
         }
 
 
-        /* =================================================
-           成功
-           ================================================= */
+        #start-screen {
+
+            position: fixed;
+
+            inset: 0;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background:
+                rgba(0, 0, 0, 0.94);
+
+            z-index: 30;
+
+        }
+
+
+        #start-card {
+
+            width: calc(100% - 40px);
+
+            max-width: 420px;
+
+            padding: 30px 24px;
+
+            background: white;
+
+            border-radius: 20px;
+
+            text-align: center;
+
+        }
+
+
+        #start-card h1 {
+
+            margin: 0 0 12px 0;
+
+        }
+
+
+        #start-card p {
+
+            color: #555;
+
+            line-height: 1.6;
+
+        }
+
+
+        #start-button {
+
+            width: 100%;
+
+            margin-top: 15px;
+
+            padding: 15px;
+
+            border: none;
+
+            border-radius: 12px;
+
+            background: #111;
+
+            color: white;
+
+            font-size: 18px;
+
+            font-weight: bold;
+
+        }
+
 
         #success {
 
@@ -133,7 +204,7 @@
             padding: 30px 20px;
 
             background:
-                rgba(0, 160, 80, 0.92);
+                rgba(0, 160, 80, 0.94);
 
             color: white;
 
@@ -141,7 +212,7 @@
 
             text-align: center;
 
-            z-index: 200;
+            z-index: 25;
 
             display: none;
 
@@ -164,15 +235,6 @@
         }
 
 
-        #success p {
-
-            margin: 0;
-
-            font-size: 18px;
-
-        }
-
-
     </style>
 
 </head>
@@ -182,18 +244,53 @@
 
 
     <!-- =====================================================
-         狀態
+         AR Container
+         ===================================================== -->
+
+    <div id="ar-container"></div>
+
+
+    <!-- =====================================================
+         Status
          ===================================================== -->
 
     <div id="status">
+        尚未啟動
+    </div>
 
-        正在準備 MindAR 官方測試...
+
+    <!-- =====================================================
+         Start Screen
+         ===================================================== -->
+
+    <div id="start-screen">
+
+        <div id="start-card">
+
+            <h1>
+                🎯 MindAR 官方測試
+            </h1>
+
+            <p>
+                這次只測試 MindAR Image Target。
+            </p>
+
+            <p>
+                不使用你的 targets-v2.mind、
+                route.js、Goose 或 Arrow。
+            </p>
+
+            <button id="start-button">
+                開啟 AR 相機
+            </button>
+
+        </div>
 
     </div>
 
 
     <!-- =====================================================
-         成功訊息
+         Success
          ===================================================== -->
 
     <div id="success">
@@ -202,113 +299,61 @@
             🎯 TARGET FOUND
         </h1>
 
-        <p>
-            MindAR 官方 Target 辨識成功！
-        </p>
+        <div>
+            MindAR 官方 Target 辨識成功
+        </div>
 
     </div>
 
 
     <!-- =====================================================
-         MindAR Scene
+         Main
          ===================================================== -->
 
-    <a-scene
+    <script type="module">
 
-        mindar-image="
-            imageTargetSrc:
-            https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.mind;
-            autoStart: true;
-            uiLoading: yes;
-            uiScanning: yes;
-            uiError: yes;
-        "
-
-        color-space="sRGB"
-
-        renderer="
-            colorManagement: true;
-            physicallyCorrectLights
-        "
-
-        vr-mode-ui="
-            enabled: false
-        "
-
-        device-orientation-permission-ui="
-            enabled: false
-        "
-
-    >
+        import * as THREE from "three";
 
 
-        <!-- =================================================
-             Camera
-             ================================================= -->
-
-        <a-camera
-
-            position="0 0 0"
-
-            look-controls="
-                enabled: false
-            "
-
-        ></a-camera>
+        import {
+            MindARThree
+        } from
+            "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js";
 
 
-        <!-- =================================================
-             Target 0
-             ================================================= -->
+        // ====================================================
+        // Official MindAR Target
+        // ====================================================
 
-        <a-entity
-
-            id="target"
-
-            mindar-image-target="
-                targetIndex: 0
-            "
-
-        >
+        const TARGET_FILE =
+            "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.mind";
 
 
-            <!-- =============================================
-                 藍色測試方塊
-                 ============================================= -->
+        // ====================================================
+        // HTML
+        // ====================================================
 
-            <a-plane
-
-                color="#00ff00"
-
-                opacity="0.7"
-
-                position="0 0 0"
-
-                height="0.552"
-
-                width="1"
-
-                rotation="0 0 0"
-
-            ></a-plane>
-
-
-        </a-entity>
-
-
-    </a-scene>
-
-
-    <!-- =====================================================
-         JavaScript
-         ===================================================== -->
-
-    <script>
+        const container =
+            document.querySelector(
+                "#ar-container"
+            );
 
 
         const status =
             document.querySelector(
                 "#status"
+            );
+
+
+        const startScreen =
+            document.querySelector(
+                "#start-screen"
+            );
+
+
+        const startButton =
+            document.querySelector(
+                "#start-button"
             );
 
 
@@ -318,107 +363,340 @@
             );
 
 
-        const target =
-            document.querySelector(
-                "#target"
+        // ====================================================
+        // 初始化 MindAR
+        // ====================================================
+
+        let mindarThree;
+
+
+        try {
+
+            console.log(
+                "建立 MindAR..."
             );
 
 
+            mindarThree =
+                new MindARThree({
+
+                    container:
+                        container,
+
+                    imageTargetSrc:
+                        TARGET_FILE,
+
+                    maxTrack:
+                        1
+
+                });
+
+
+            console.log(
+                "MindAR 建立完成"
+            );
+
+
+            status.textContent =
+                "MindAR 已準備完成，請按「開啟 AR 相機」";
+
+
+        } catch (error) {
+
+            console.error(
+                "MindAR 建立失敗：",
+                error
+            );
+
+
+            status.textContent =
+                "❌ MindAR 建立失敗";
+
+
+        }
+
+
         // ====================================================
-        // Target Found
+        // Three.js
         // ====================================================
 
-        target.addEventListener(
-            "targetFound",
-            () => {
+        let renderer;
+        let scene;
+        let camera;
+        let anchor;
 
-                console.log(
-                    "================================"
+
+        if (mindarThree) {
+
+            renderer =
+                mindarThree.renderer;
+
+            scene =
+                mindarThree.scene;
+
+            camera =
+                mindarThree.camera;
+
+
+            // =================================================
+            // Light
+            // =================================================
+
+            const light =
+                new THREE.HemisphereLight(
+                    0xffffff,
+                    0xbbbbbb,
+                    3
                 );
 
 
-                console.log(
-                    "🎯 OFFICIAL MINDAR TARGET FOUND"
+            scene.add(
+                light
+            );
+
+
+            // =================================================
+            // Target 0
+            // =================================================
+
+            anchor =
+                mindarThree.addAnchor(
+                    0
                 );
 
 
-                console.log(
-                    "Target 0 辨識成功"
+            // =================================================
+            // 測試方塊
+            // =================================================
+
+            const geometry =
+                new THREE.BoxGeometry(
+                    0.3,
+                    0.3,
+                    0.3
                 );
 
 
+            const material =
+                new THREE.MeshBasicMaterial({
+
+                    color:
+                        0x00ff00
+
+                });
+
+
+            const cube =
+                new THREE.Mesh(
+                    geometry,
+                    material
+                );
+
+
+            cube.position.set(
+                0,
+                0,
+                0
+            );
+
+
+            anchor.group.add(
+                cube
+            );
+
+
+            // =================================================
+            // Target Found
+            // =================================================
+
+            anchor.onTargetFound =
+                () => {
+
+                    console.log(
+                        "================================"
+                    );
+
+
+                    console.log(
+                        "🎯 OFFICIAL TARGET 0 FOUND"
+                    );
+
+
+                    console.log(
+                        "================================"
+                    );
+
+
+                    status.textContent =
+                        "🎯 TARGET 0 FOUND";
+
+
+                    success.classList.add(
+                        "show"
+                    );
+
+                };
+
+
+            // =================================================
+            // Target Lost
+            // =================================================
+
+            anchor.onTargetLost =
+                () => {
+
+                    console.log(
+                        "Target 0 Lost"
+                    );
+
+
+                    status.textContent =
+                        "Target 暫時離開鏡頭";
+
+
+                    success.classList.remove(
+                        "show"
+                    );
+
+                };
+
+        }
+
+
+        // ====================================================
+        // Start AR
+        // ====================================================
+
+        async function startAR() {
+
+            if (!mindarThree) {
+
+                return;
+
+            }
+
+
+            try {
+
+                startButton.disabled =
+                    true;
+
+
+                startButton.textContent =
+                    "正在開啟相機…";
+
+
+                status.textContent =
+                    "正在啟動相機…";
+
+
                 console.log(
-                    "================================"
+                    "開始 MindAR..."
+                );
+
+
+                // =============================================
+                // 啟動
+                // =============================================
+
+                await mindarThree.start();
+
+
+                console.log(
+                    "✅ MindAR 啟動成功"
                 );
 
 
                 status.textContent =
-                    "🎯 Target 0 已辨識";
+                    "請對準官方 card.png";
 
 
-                success.classList.add(
-                    "show"
+                // =============================================
+                // Render
+                // =============================================
+
+                renderer.setAnimationLoop(
+                    () => {
+
+                        renderer.render(
+                            scene,
+                            camera
+                        );
+
+                    }
                 );
 
-            }
-        );
+
+                // =============================================
+                // 隱藏開始畫面
+                // =============================================
+
+                startScreen.style.display =
+                    "none";
 
 
-        // ====================================================
-        // Target Lost
-        // ====================================================
+            } catch (error) {
 
-        target.addEventListener(
-            "targetLost",
-            () => {
-
-                console.log(
-                    "Target 0 Lost"
+                console.error(
+                    "❌ MindAR 啟動失敗：",
+                    error
                 );
 
 
                 status.textContent =
-                    "Target 暫時離開鏡頭";
+                    "❌ AR 啟動失敗：" +
+                    error.message;
 
 
-                success.classList.remove(
-                    "show"
-                );
+                startButton.disabled =
+                    false;
+
+
+                startButton.textContent =
+                    "重新開啟 AR";
 
             }
+
+        }
+
+
+        // ====================================================
+        // Button
+        // ====================================================
+
+        startButton.addEventListener(
+            "click",
+            startAR
         );
 
 
         // ====================================================
-        // MindAR Ready
+        // Console
         // ====================================================
 
-        document.addEventListener(
-            "DOMContentLoaded",
-            () => {
-
-                console.log(
-                    "================================"
-                );
-
-
-                console.log(
-                    "MindAR Official Test"
-                );
-
-
-                console.log(
-                    "Target: official card.mind"
-                );
-
-
-                console.log(
-                    "================================"
-                );
-
-            }
+        console.log(
+            "================================"
         );
 
+
+        console.log(
+            "MindAR Official Test Ready"
+        );
+
+
+        console.log(
+            "Target:"
+        );
+
+
+        console.log(
+            TARGET_FILE
+        );
+
+
+        console.log(
+            "================================"
+        );
 
     </script>
 
