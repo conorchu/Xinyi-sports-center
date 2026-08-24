@@ -2,21 +2,28 @@
 // Xinyi Sports Center AR
 // MindAR + Three.js
 //
-// 功能：
-// 1. 5 張 Target
-// 2. Goose + Arrow
-// 3. 不使用點點路線
-// 4. Goose 永遠位於 Arrow 右下方
-// 5. Goose / Arrow 尺寸縮小為原本 1/3
-// 6. Target 4 = arrived
+// 保留：
+// ✅ 5 張 Target
+// ✅ Goose
+// ✅ Arrow
+// ✅ Arrived
+// ❌ Dot Route
+//
+// 本版修改：
+// ✅ Arrow = 原本 1/3
+// ✅ Goose = 原本 1/3
+// ✅ Goose 永遠在 Arrow 右下方
 // ========================================================
 
 
 // ========================================================
 // Three.js
+// 直接使用 CDN
+// 不使用 import "three"
 // ========================================================
 
-import * as THREE from "three";
+import * as THREE from
+    "https://unpkg.com/three@0.160.0/build/three.module.js";
 
 
 // ========================================================
@@ -25,7 +32,8 @@ import * as THREE from "three";
 
 import {
     MindARThree
-} from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js";
+} from
+    "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js";
 
 
 // ========================================================
@@ -38,7 +46,7 @@ import {
 
 
 // ========================================================
-// 基本設定
+// Target
 // ========================================================
 
 const TARGET_FILE = "./targets-v2.mind";
@@ -47,125 +55,90 @@ const TARGET_FILE = "./targets-v2.mind";
 // ========================================================
 // AR 物件縮放
 //
-// 原本：
-// Goose 約 1.0～1.1
-// Arrow 約 0.85～1.0
-//
-// 現在全部 × 1/3
+// 原本尺寸 × 1/3
 // ========================================================
 
 const OBJECT_SCALE = 1 / 3;
 
 
 // ========================================================
-// Goose / Arrow 相對位置
+// Goose 相對 Arrow 的位置
 //
-// Arrow：上方
-// Goose：右下方
-//
-// 注意：
-// Three.js
-// X 正值 = 右
-// Y 負值 = 下
+// Goose：
+// X = 右
+// Y = 下
 // ========================================================
 
-const ARROW_POSITION = {
-    x: 0,
-    y: 0.25,
-    z: 0.01
-};
+const ARROW_X = 0;
+
+const ARROW_Y = 0.25;
+
+const ARROW_Z = 0.01;
 
 
-const GOOSE_POSITION = {
-    x: 0.18,
-    y: -0.12,
-    z: 0.02
-};
+const GOOSE_X = 0.18;
+
+const GOOSE_Y = -0.12;
+
+const GOOSE_Z = 0.02;
 
 
 // ========================================================
-// 原始尺寸
+// 原本 Arrow 尺寸
 // ========================================================
 
-const ORIGINAL_SIZE = {
+const ARROW_SIZE = {
 
-    goose: {
-
-        forward: {
-            width: 1.0,
-            height: 1.35
-        },
-
-        left: {
-            width: 1.1,
-            height: 1.3
-        },
-
-        right: {
-            width: 1.1,
-            height: 1.3
-        },
-
-        arrived: {
-            width: 1.1,
-            height: 1.3
-        }
-
+    forward: {
+        width: 0.85,
+        height: 1.0
     },
 
+    left: {
+        width: 1.0,
+        height: 0.8
+    },
 
-    arrow: {
+    right: {
+        width: 1.0,
+        height: 0.8
+    },
 
-        forward: {
-            width: 0.85,
-            height: 1.0
-        },
-
-        left: {
-            width: 1.0,
-            height: 0.8
-        },
-
-        right: {
-            width: 1.0,
-            height: 0.8
-        },
-
-        arrived: {
-            width: 1.0,
-            height: 0.8
-        }
-
+    arrived: {
+        width: 1.0,
+        height: 0.8
     }
 
 };
 
 
 // ========================================================
-// 實際尺寸 = 原本的 1/3
+// 原本 Goose 尺寸
 // ========================================================
 
-function getSize(type, direction) {
+const GOOSE_SIZE = {
 
-    const original =
-        ORIGINAL_SIZE[type][direction]
-        ||
-        ORIGINAL_SIZE[type].forward;
+    forward: {
+        width: 1.0,
+        height: 1.35
+    },
 
+    left: {
+        width: 1.1,
+        height: 1.3
+    },
 
-    return {
+    right: {
+        width: 1.1,
+        height: 1.3
+    },
 
-        width:
-            original.width *
-            OBJECT_SCALE,
+    arrived: {
+        width: 1.1,
+        height: 1.3
+    }
 
-        height:
-            original.height *
-            OBJECT_SCALE
-
-    };
-
-}
+};
 
 
 // ========================================================
@@ -175,18 +148,13 @@ function getSize(type, direction) {
 const statusText =
     document.querySelector("#status");
 
-
 const currentLocation =
     document.querySelector("#current-location");
 
 
 // ========================================================
-// 狀態
+// MindAR
 // ========================================================
-
-let currentTargetIndex = null;
-
-let currentAnchor = null;
 
 let mindarThree = null;
 
@@ -206,69 +174,65 @@ const textureLoader =
 
 
 // ========================================================
-// 取得 Arrow 圖片
+// Arrow 圖片
 // ========================================================
 
 function getArrowImage(direction) {
 
-    switch (direction) {
+    if (direction === "left") {
 
-        case "left":
-
-            return "./arrow_left.png";
-
-
-        case "right":
-
-            return "./arrow_right.png";
-
-
-        case "arrived":
-
-            return "./arrow_arrived.png";
-
-
-        case "forward":
-
-        default:
-
-            return "./arrow_forward.png";
+        return "./arrow_left.png";
 
     }
+
+
+    if (direction === "right") {
+
+        return "./arrow_right.png";
+
+    }
+
+
+    if (direction === "arrived") {
+
+        return "./arrow_arrived.png";
+
+    }
+
+
+    return "./arrow_forward.png";
 
 }
 
 
 // ========================================================
-// 取得 Goose 圖片
+// Goose 圖片
 // ========================================================
 
 function getGooseImage(direction) {
 
-    switch (direction) {
+    if (direction === "left") {
 
-        case "left":
-
-            return "./goose_left.png";
-
-
-        case "right":
-
-            return "./goose_right.png";
-
-
-        case "arrived":
-
-            return "./goose_arrived.png";
-
-
-        case "forward":
-
-        default:
-
-            return "./goose_forward.png";
+        return "./goose_left.png";
 
     }
+
+
+    if (direction === "right") {
+
+        return "./goose_right.png";
+
+    }
+
+
+    if (direction === "arrived") {
+
+        return "./goose_arrived.png";
+
+    }
+
+
+    return "./goose_forward.png";
 
 }
 
@@ -281,7 +245,9 @@ function createSprite(
     imagePath,
     width,
     height,
-    position
+    x,
+    y,
+    z
 ) {
 
     const texture =
@@ -322,9 +288,9 @@ function createSprite(
 
 
     sprite.position.set(
-        position.x,
-        position.y,
-        position.z
+        x,
+        y,
+        z
     );
 
 
@@ -334,7 +300,7 @@ function createSprite(
 
 
 // ========================================================
-// 建立 Goose + Arrow
+// 建立 Arrow + Goose
 // ========================================================
 
 function createARObjects(
@@ -346,22 +312,30 @@ function createARObjects(
         "================================"
     );
 
-
     console.log(
         "載入 AR 素材：",
         direction
     );
 
 
-    // ----------------------------------------------------
+    // ====================================================
     // Arrow
-    // ----------------------------------------------------
+    // ====================================================
 
-    const arrowSize =
-        getSize(
-            "arrow",
-            direction
-        );
+    const originalArrow =
+        ARROW_SIZE[direction]
+        ||
+        ARROW_SIZE.forward;
+
+
+    const arrowWidth =
+        originalArrow.width *
+        OBJECT_SCALE;
+
+
+    const arrowHeight =
+        originalArrow.height *
+        OBJECT_SCALE;
 
 
     const arrowImage =
@@ -375,28 +349,41 @@ function createARObjects(
 
             arrowImage,
 
-            arrowSize.width,
+            arrowWidth,
 
-            arrowSize.height,
+            arrowHeight,
 
-            ARROW_POSITION
+            ARROW_X,
+
+            ARROW_Y,
+
+            ARROW_Z
 
         );
 
 
     arrow.name =
-        "AR_ARROW";
+        "ARROW";
 
 
-    // ----------------------------------------------------
+    // ====================================================
     // Goose
-    // ----------------------------------------------------
+    // ====================================================
 
-    const gooseSize =
-        getSize(
-            "goose",
-            direction
-        );
+    const originalGoose =
+        GOOSE_SIZE[direction]
+        ||
+        GOOSE_SIZE.forward;
+
+
+    const gooseWidth =
+        originalGoose.width *
+        OBJECT_SCALE;
+
+
+    const gooseHeight =
+        originalGoose.height *
+        OBJECT_SCALE;
 
 
     const gooseImage =
@@ -410,22 +397,26 @@ function createARObjects(
 
             gooseImage,
 
-            gooseSize.width,
+            gooseWidth,
 
-            gooseSize.height,
+            gooseHeight,
 
-            GOOSE_POSITION
+            GOOSE_X,
+
+            GOOSE_Y,
+
+            GOOSE_Z
 
         );
 
 
     goose.name =
-        "AR_GOOSE";
+        "GOOSE";
 
 
-    // ----------------------------------------------------
-    // 加入 Anchor
-    // ----------------------------------------------------
+    // ====================================================
+    // 加入 AR
+    // ====================================================
 
     anchor.group.add(
         arrow
@@ -437,51 +428,33 @@ function createARObjects(
     );
 
 
-    // ----------------------------------------------------
+    // ====================================================
     // Console
-    // ----------------------------------------------------
+    // ====================================================
 
     console.log(
-        "✅ AR 顯示：",
-        direction
+        "✅ Arrow：1/3"
     );
-
 
     console.log(
-        "Arrow：",
-        arrowImage
+        "✅ Goose：1/3"
     );
-
 
     console.log(
-        "Goose：",
-        gooseImage
+        "Arrow position:",
+        ARROW_X,
+        ARROW_Y
     );
-
 
     console.log(
-        "Arrow Size：",
-        arrowSize
+        "Goose position:",
+        GOOSE_X,
+        GOOSE_Y
     );
-
 
     console.log(
-        "Goose Size：",
-        gooseSize
+        "Goose = Arrow 右下方"
     );
-
-
-    console.log(
-        "Arrow Position：",
-        ARROW_POSITION
-    );
-
-
-    console.log(
-        "Goose Position：",
-        GOOSE_POSITION
-    );
-
 
     console.log(
         "================================"
@@ -497,13 +470,15 @@ function createARObjects(
 
 
 // ========================================================
-// 清除目前 AR 物件
+// 清除 AR 物件
 // ========================================================
 
 function clearARObjects(anchor) {
 
     if (!anchor) {
+
         return;
+
     }
 
 
@@ -520,9 +495,13 @@ function clearARObjects(anchor) {
             );
 
 
-            if (object.material) {
+            if (
+                object.material
+            ) {
 
-                if (object.material.map) {
+                if (
+                    object.material.map
+                ) {
 
                     object.material.map.dispose();
 
@@ -534,7 +513,9 @@ function clearARObjects(anchor) {
             }
 
 
-            if (object.geometry) {
+            if (
+                object.geometry
+            ) {
 
                 object.geometry.dispose();
 
@@ -547,109 +528,23 @@ function clearARObjects(anchor) {
 
 
 // ========================================================
-// 更新畫面上的文字
-// ========================================================
-
-function updateUI(targetIndex) {
-
-    const data =
-        ROUTE[targetIndex];
-
-
-    if (!data) {
-        return;
-    }
-
-
-    // ----------------------------------------------------
-    // 目前位置
-    // ----------------------------------------------------
-
-    if (currentLocation) {
-
-        currentLocation.textContent =
-            data.location;
-
-    }
-
-
-    // ----------------------------------------------------
-    // 指示文字
-    // ----------------------------------------------------
-
-    if (statusText) {
-
-        statusText.textContent =
-            data.instruction;
-
-    }
-
-
-    console.log(
-        "================================"
-    );
-
-
-    console.log(
-        "🎯 Target",
-        targetIndex,
-        "已辨識"
-    );
-
-
-    console.log(
-        "Location:",
-        data.location
-    );
-
-
-    console.log(
-        "Instruction:",
-        data.instruction
-    );
-
-
-    console.log(
-        "Direction:",
-        data.direction
-    );
-
-
-    console.log(
-        "Arrived:",
-        data.arrived
-    );
-
-
-    console.log(
-        "================================"
-    );
-
-}
-
-
-// ========================================================
 // Target Found
 // ========================================================
 
-function onTargetFound(
+function handleTargetFound(
     targetIndex,
     anchor
 ) {
+
+    console.log(
+        "================================"
+    );
 
     console.log(
         "🎯 Target",
         targetIndex,
         "Found"
     );
-
-
-    currentTargetIndex =
-        targetIndex;
-
-
-    currentAnchor =
-        anchor;
 
 
     const data =
@@ -659,7 +554,7 @@ function onTargetFound(
     if (!data) {
 
         console.error(
-            "找不到 Route：",
+            "❌ ROUTE 找不到 Target：",
             targetIndex
         );
 
@@ -668,27 +563,67 @@ function onTargetFound(
     }
 
 
-    // ----------------------------------------------------
-    // 更新文字
-    // ----------------------------------------------------
+    // ====================================================
+    // UI
+    // ====================================================
 
-    updateUI(
-        targetIndex
+    if (
+        currentLocation
+    ) {
+
+        currentLocation.textContent =
+            data.location;
+
+    }
+
+
+    if (
+        statusText
+    ) {
+
+        statusText.textContent =
+            data.instruction;
+
+    }
+
+
+    // ====================================================
+    // Console
+    // ====================================================
+
+    console.log(
+        "Location:",
+        data.location
+    );
+
+    console.log(
+        "Instruction:",
+        data.instruction
+    );
+
+    console.log(
+        "Direction:",
+        data.direction
+    );
+
+    console.log(
+        "Arrived:",
+        data.arrived
     );
 
 
-    // ----------------------------------------------------
-    // 清除舊物件
-    // ----------------------------------------------------
+    // ====================================================
+    // 清除舊 AR
+    // ====================================================
 
     clearARObjects(
         anchor
     );
 
 
-    // ----------------------------------------------------
-    // 建立新的 Goose + Arrow
-    // ----------------------------------------------------
+    // ====================================================
+    // 建立新的 AR
+    // ====================================================
 
     createARObjects(
 
@@ -698,6 +633,11 @@ function onTargetFound(
 
     );
 
+
+    console.log(
+        "================================"
+    );
+
 }
 
 
@@ -705,7 +645,7 @@ function onTargetFound(
 // Target Lost
 // ========================================================
 
-function onTargetLost(
+function handleTargetLost(
     targetIndex
 ) {
 
@@ -715,49 +655,33 @@ function onTargetLost(
         "Lost"
     );
 
-
-    if (
-        currentTargetIndex ===
-        targetIndex
-    ) {
-
-        currentTargetIndex =
-            null;
-
-        currentAnchor =
-            null;
-
-    }
-
 }
 
 
 // ========================================================
-// 建立 MindAR
+// 初始化 MindAR
+//
+// 注意：
+// 這裡「只初始化」
+// 不開啟相機
 // ========================================================
 
-async function initAR() {
+function initAR() {
 
     console.log(
         "================================"
     );
-
 
     console.log(
         "Xinyi Sports Center AR"
     );
 
-
     console.log(
-        "================================"
+        "開始初始化 MindAR..."
     );
 
 
     try {
-
-        // ==================================================
-        // 建立 MindAR
-        // ==================================================
 
         mindarThree =
             new MindARThree({
@@ -809,16 +733,7 @@ async function initAR() {
 
 
         // ==================================================
-        // Target 數量
-        // ==================================================
-
-        console.log(
-            "Target：0 ~ 4"
-        );
-
-
-        // ==================================================
-        // 建立 5 個 Target Anchor
+        // 5 個 Target
         // ==================================================
 
         for (
@@ -833,14 +748,10 @@ async function initAR() {
                 );
 
 
-            // ------------------------------------------------
-            // Target Found
-            // ------------------------------------------------
-
             anchor.onTargetFound =
                 () => {
 
-                    onTargetFound(
+                    handleTargetFound(
                         i,
                         anchor
                     );
@@ -848,14 +759,10 @@ async function initAR() {
                 };
 
 
-            // ------------------------------------------------
-            // Target Lost
-            // ------------------------------------------------
-
             anchor.onTargetLost =
                 () => {
 
-                    onTargetLost(
+                    handleTargetLost(
                         i
                     );
 
@@ -864,49 +771,33 @@ async function initAR() {
         }
 
 
-        // ==================================================
-        // Console
-        // ==================================================
-
         console.log(
-            "MindAR：ON"
+            "✅ MindAR 初始化完成"
         );
-
 
         console.log(
             "Target：0 ~ 4"
         );
 
-
         console.log(
             "Goose：ON"
         );
-
 
         console.log(
             "Arrow：ON"
         );
 
-
         console.log(
             "Arrived：ON"
         );
-
 
         console.log(
             "Dot Route：OFF"
         );
 
-
         console.log(
             "Object Scale：1/3"
         );
-
-
-        console.log(
-            "Goose Position：Arrow 右下方"
-        );
-
 
         console.log(
             "================================"
@@ -921,7 +812,9 @@ async function initAR() {
         );
 
 
-        if (statusText) {
+        if (
+            statusText
+        ) {
 
             statusText.textContent =
                 "AR 初始化失敗";
@@ -934,7 +827,7 @@ async function initAR() {
 
 
 // ========================================================
-// 啟動 AR
+// 開啟 AR 相機
 // ========================================================
 
 async function startAR() {
@@ -943,11 +836,9 @@ async function startAR() {
         "================================"
     );
 
-
     console.log(
-        "開始啟動 AR"
+        "📷 startAR() 被執行"
     );
-
 
     console.log(
         "================================"
@@ -956,44 +847,68 @@ async function startAR() {
 
     try {
 
-        if (!mindarThree) {
+        // ==================================================
+        // 如果尚未初始化
+        // ==================================================
 
-            console.log(
-                "MindAR 尚未初始化，開始初始化..."
-            );
+        if (
+            !mindarThree
+        ) {
 
-
-            await initAR();
+            initAR();
 
         }
 
 
-        if (!mindarThree) {
+        if (
+            !mindarThree
+        ) {
 
             throw new Error(
-                "MindAR 初始化失敗"
+                "MindAR 尚未成功初始化"
             );
 
         }
 
 
         // ==================================================
-        // 開始 AR
+        // 啟動相機
         // ==================================================
+
+        if (
+            statusText
+        ) {
+
+            statusText.textContent =
+                "正在開啟相機…";
+
+        }
+
+
+        console.log(
+            "正在啟動 MindAR..."
+        );
+
 
         await mindarThree.start();
 
 
         console.log(
+            "================================"
+        );
+
+        console.log(
             "✅ MindAR 啟動成功"
         );
 
+        console.log(
+            "================================"
+        );
 
-        // ==================================================
-        // 更新 UI
-        // ==================================================
 
-        if (statusText) {
+        if (
+            statusText
+        ) {
 
             statusText.textContent =
                 "請對準標地圖";
@@ -1002,7 +917,7 @@ async function startAR() {
 
 
         // ==================================================
-        // Render Loop
+        // Render
         // ==================================================
 
         renderer.setAnimationLoop(
@@ -1017,30 +932,28 @@ async function startAR() {
         );
 
 
-        console.log(
-            "================================"
-        );
-
-
-        console.log(
-            "🟢 AR Camera Ready"
-        );
-
-
-        console.log(
-            "================================"
-        );
-
-
     } catch (error) {
 
         console.error(
-            "❌ AR 啟動失敗：",
+            "================================"
+        );
+
+        console.error(
+            "❌ AR 啟動失敗"
+        );
+
+        console.error(
             error
         );
 
+        console.error(
+            "================================"
+        );
 
-        if (statusText) {
+
+        if (
+            statusText
+        ) {
 
             statusText.textContent =
                 "AR 啟動失敗：" +
@@ -1054,11 +967,11 @@ async function startAR() {
 
 
 // ========================================================
-// 暴露給 index.html
+// 給 index.html 的按鈕使用
 //
-// 如果你的 index.html 是：
+// 如果 index.html：
 // onclick="startAR()"
-// 就需要這一行。
+// 就會找到這個
 // ========================================================
 
 window.startAR =
@@ -1066,22 +979,30 @@ window.startAR =
 
 
 // ========================================================
-// 初始化
+// 注意
+//
+// 這裡仍然初始化 MindAR，
+// 但「不會開相機」。
+// 相機一定要等使用者按按鈕。
 // ========================================================
 
 initAR();
 
 
 // ========================================================
-// 防止手機旋轉後畫面尺寸錯誤
+// Resize
 // ========================================================
 
 window.addEventListener(
     "resize",
     () => {
 
-        if (!renderer) {
+        if (
+            !renderer
+        ) {
+
             return;
+
         }
 
 
@@ -1102,31 +1023,25 @@ console.log(
     "================================"
 );
 
-
 console.log(
-    "Xinyi Sports Center AR App Loaded"
+    "Xinyi Sports Center AR Loaded"
 );
-
 
 console.log(
     "Arrow：1/3"
 );
 
-
 console.log(
     "Goose：1/3"
 );
-
 
 console.log(
     "Goose：Arrow 右下方"
 );
 
-
 console.log(
     "Dot Route：OFF"
 );
-
 
 console.log(
     "================================"
