@@ -58,7 +58,7 @@ import { ROUTES } from "./route.js";
 // MindAR Target 檔案
 // ============================================================
 
-const TARGET_FILE = "./targets.mind";
+const TARGET_FILE = "./targets-v2.mind";
 
 
 // ============================================================
